@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="v1-contacts-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <apikit:config name="v1-contacts-config" raml="v1-contacts.raml" consoleEnabled="false" doc:name="Router"/>
+    <flow name="v1-contacts-main">
+        <http:listener config-ref="v1-contacts-httpListenerConfig" path="/v1/*" doc:name="HTTP"/>
+		<message-properties-transformer scope="invocation" doc:name="Message Properties">
+			<add-message-property key="queryParams" value="#[message.inboundProperties.'http.query.params']"/>
+			<add-message-property key="uriParams" value="#[message.inboundProperties.'http.uri.params']"/>
+		</message-properties-transformer>
+        <apikit:router config-ref="v1-contacts-config" doc:name="APIkit Router"/>
+        <exception-strategy ref="v1-contacts-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <flow name="v1-contacts-console">
+        <http:listener config-ref="v1-contacts-httpListenerConfig" path="/v1/console/*" doc:name="HTTP"/>
+        <apikit:console config-ref="v1-contacts-config" doc:name="APIkit Console"/>
+    </flow>
+    <flow name="delete:/identifications/{iid}:v1-contacts-config">
+		<flow-ref name="impl-delete-identifications-by-id" doc:name="impl-delete-identifications-by-id"/>
+
+    </flow>
+    <flow name="delete:/identifications/{iid}/communications/{cid}:v1-contacts-config">
+		<flow-ref name="impl-delete-communications-by-iid-and-cid" doc:name="impl-delete-communications-by-iid-and-cid"/>
+
+    </flow>
+    <flow name="delete:/identifications/{iid}/addresses/{aid}:v1-contacts-config">
+		<flow-ref name="impl-delete-addresses-by-iid-and-aid" doc:name="impl-delete-addresses-by-iid-and-aid"/>
+
+    </flow>
+    <flow name="patch:/identifications/{iid}/communications/{cid}:v1-contacts-config">
+		<flow-ref name="impl-update-communications" doc:name="impl-update-communications"/>
+
+    </flow>
+    <flow name="patch:/identifications/{iid}:v1-contacts-config">
+		<flow-ref name="impl-update-identification" doc:name="impl-update-identification"/>
+
+    </flow>
+    <flow name="patch:/identifications/{iid}/addresses/{aid}:v1-contacts-config">
+		<flow-ref name="impl-update-address" doc:name="impl-update-address"/>
+
+    </flow>
+    <flow name="get:/identifications/{iid}/addresses:v1-contacts-config">
+		<flow-ref name="impl-get-all-addresses-by-identification-id" doc:name="impl-get-all-addresses-by-identification-id"/>
+
+    </flow>
+    <flow name="get:/identifications/{iid}/communications:v1-contacts-config">
+		<flow-ref name="impl-get-all-communications-by-identification-id" doc:name="impl-get-all-communications-by-identification-id"/>
+
+    </flow>
+    <flow name="get:/identifications:v1-contacts-config">
+		<flow-ref name="impl-get-all-identifications-by-query" doc:name="impl-get-all-identifications-by-query"/>
+
+    </flow>
+    <flow name="get:/identifications/{iid}/addresses/{aid}:v1-contacts-config">
+		<flow-ref name="impl-get-all-addresses-by-identification-id-and-address-id" doc:name="impl-get-all-addresses-by-identification-id-and-address-id"/>
+
+    </flow>
+    <flow name="get:/identifications/{iid}/communications/{cid}:v1-contacts-config">
+		<flow-ref name="impl-get-all-communications-by-identification-id-and-communication-id" doc:name="impl-get-all-communications-by-identification-id-and-communication-id"/>
+
+    </flow>
+    <flow name="get:/identifications/{iid}:v1-contacts-config">
+		<flow-ref name="impl-get-identifications-by-id" doc:name="impl-get-identifications-by-id"/>
+
+    </flow>
+    <flow name="post:/identifications/{iid}/addresses:v1-contacts-config">
+		<flow-ref name="impl-create-address" doc:name="impl-create-address"/>
+
+    </flow>
+    <flow name="post:/identifications/{iid}/communications:v1-contacts-config">
+		<flow-ref name="impl-create-communication" doc:name="impl-create-communication"/>
+
+    </flow>
+    <flow name="post:/identifications:v1-contacts-config">
+		<flow-ref name="impl-create-identification" doc:name="impl-create-identification"/>
+
+    </flow>
+    <apikit:mapping-exception-strategy name="v1-contacts-apiKitGlobalExceptionMapping">
+        <apikit:mapping statusCode="404">
+            <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="405">
+            <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="415">
+            <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="406">
+            <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="400">
+            <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+			<set-variable variableName="exceptionMessage" value="#[exception.message]" doc:name="Variable: exceptionMessage"/>
+			<dw:transform-message doc:name="Transform Message">
+				<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	"message": "All fields are required.",
+	"error": flowVars.exceptionMessage
+}]]></dw:set-payload>
+			</dw:transform-message>
+
+        </apikit:mapping>
+    </apikit:mapping-exception-strategy>
+</mule>

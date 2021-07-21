@@ -1,0 +1,271 @@
+#%RAML 1.0
+title: MS3 Contacts API
+mediaType:
+  - application/json
+version: "1"
+protocols:
+  - HTTP
+baseUri: /v1
+description: MS3 Contacts API V1
+
+uses:
+  objects: types/objects.raml
+
+/identifications:
+  get:
+    description: Retrieves all contacts.
+    queryParameters:
+      orderBy:
+        type: string
+        required: false
+        default: id
+      order: 
+        enum: ["ASC", "DESC"]
+        required: false
+        default: "ASC"
+      name:
+        type: string
+        required: false
+    responses: 
+      200:
+        body:
+          example: !include examples/identifications.raml
+      404:
+        body:
+          application/json:
+            example: |
+              {
+                "error": "Resource not found."
+              }
+  post:
+    description: Create new a contact.
+    body:
+      type: objects.identification
+      example: !include examples/requests/identifications.raml
+    responses: 
+      201:
+        body:
+          example: !include examples/identifications.raml
+      400:
+        body:
+          application/json:
+            example: |
+              {
+                "message": "All fields are required.",
+                "error": "All fields are required."
+              }
+      500:
+        body:
+          application/json:
+            example: |
+              {
+                  "message": "Internal Server Error"
+              }
+  /{iid}:
+    get:
+      description: Get identification by iid.
+      responses: 
+        200:
+          body:
+            example: !include examples/identifications.raml
+        404:
+          body:
+            application/json:
+              example: |
+                {
+                  error: "resource not found"
+                }
+    patch:
+      description: Patch Identification By Id.
+      body:
+        type: objects.patchIdentification
+        example: !include examples/requests/identifications.raml
+      responses: 
+        200:
+          body:
+            example: !include examples/identifications.raml
+        400:
+          body:
+            application/json:
+              example: |
+                {
+                  "message": "All fields are required.",
+                  "error": "All fields are required."
+                }
+        500:
+          body:
+            application/json:
+              example: |
+                {
+                    "message": "Internal Server Error"
+                }
+    delete:
+      description: Delete Identification By Id.
+      responses:
+        204:
+        404:
+          body:
+            application/json:
+              example: |
+                {
+                  error: "resource not found"
+                }
+    /addresses:
+      get:
+        description: Get Addresses.
+        responses: 
+          200:
+            body:
+              example: !include examples/addresses.raml
+          404:
+            body:
+              application/json:
+                example: |
+                  {
+                    error: "resource not found"
+                  }
+      post:
+        description: Create new Identification Address
+        body:
+          type: objects.address
+          example: !include examples/requests/address.raml
+        responses:
+          201:
+            body:
+              example: !include examples/addresses.raml
+          400:
+            body:
+              application/json:
+                example: |
+                  {
+                    "message": "All fields are required.",
+                    "error": "All fields are required."
+                  }
+      /{aid}:
+        get:
+          description: Get Addresses by aid.
+          responses: 
+            200:
+              body:
+                example: !include examples/addresses.raml
+            404:
+              body:
+                application/json:
+                  example: |
+                    {
+                      error: "resource not found"
+                    }
+        patch:
+          description: Updates Identification Address
+          body:
+            type: objects.patchAddress
+            example: !include examples/requests/address.raml
+          responses: 
+            200:
+              body:
+                example: !include examples/addresses.raml
+            400:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "message": "All fields are required.",
+                      "error": "All fields are required."
+                    }
+            500:
+              body:
+                application/json:
+                  example: |
+                    {
+                        "message": "Internal Server Error"
+                    }
+        delete:
+          description: Delete address iid and aid.
+          responses:
+            204:
+            404:
+              body:
+                application/json:
+                  example: |
+                    {
+                      error: "resource not found"
+                    }
+    /communications:
+      get:
+        description: Get communications.
+        responses: 
+          200:
+            body:
+              example: !include examples/communications.raml
+          404:
+            body:
+              application/json:
+                example: |
+                  {
+                    error: "resource not found"
+                  }
+      post:
+        description: Create new Identification Communication
+        body:
+          type: objects.communication
+          example: !include examples/requests/communication.raml
+        responses:
+          201:
+            body:
+              example: !include examples/addresses.raml
+          400:
+            body:
+              application/json:
+                example: |
+                  {
+                    "message": "All fields are required.",
+                    "error": "All fields are required."
+                  }
+      /{cid}:
+        get:
+          description: Get communications by cid.
+          responses: 
+            200:
+              body:
+                example: !include examples/communications.raml
+            404:
+              body:
+                application/json:
+                  example: |
+                    {
+                      error: "resource not found"
+                    }
+        patch:
+          description: Updates Identification Communication
+          body:
+            type: objects.patchCommunication
+            example: !include examples/requests/communication.raml
+          responses: 
+            200:
+              body:
+                example: !include examples/communications.raml
+            400:
+              body:
+                application/json:
+                  example: |
+                    {
+                      "message": "All fields are required.",
+                      "error": "All fields are required."
+                    }
+            500:
+              body:
+                application/json:
+                  example: |
+                    {
+                        "message": "Internal Server Error"
+                    }
+        delete:
+          description: Delete communication iid and cid.
+          responses:
+            204:
+            404:
+              body:
+                application/json:
+                  example: |
+                    {
+                      error: "resource not found"

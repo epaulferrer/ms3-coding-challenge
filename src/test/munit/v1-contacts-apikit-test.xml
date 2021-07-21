@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:mock="http://www.mulesoft.org/schema/mule/mock" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.mulesoft.org/schema/mule/mock http://www.mulesoft.org/schema/mule/mock/current/mule-mock.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+    <spring:beans>
+        <spring:import resource="classpath:experience/v1-contacts.xml" />
+        <spring:import resource="classpath:commons.xml" />
+        <spring:import resource="classpath:process/v1-contacts-process.xml" />
+        <spring:import resource="classpath:system/v1-contacts-system.xml" />
+    </spring:beans>
+    <munit:config mock-connectors="false" mock-inbounds="false" doc:name="MUnit configuration"/>
+    <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8081" basePath="/v1" doc:name="HTTP Request Configuration"/>
+	<munit:before-suite name="v1-contacts-apikit-testBefore_Suite" description="MUnit Test">
+		<db:bulk-execute config-ref="MySQL_Configuration" doc:name="init test data"><![CDATA[DELETE FROM addresses;
+ALTER TABLE addresses AUTO_INCREMENT = 1;
+
+DELETE FROM communications;
+ALTER TABLE communications AUTO_INCREMENT = 1;
+
+DELETE FROM identifications;
+ALTER TABLE identifications AUTO_INCREMENT = 1;
+
+
+INSERT INTO `identifications` (`first_name`, `last_name`, `date_of_birth`, `gender`, `title`) VALUES ('Ernest Paul', 'Ferrer', '1991-08-01', 'M', 'Mulesoft Developer');
+INSERT INTO `identifications` (`first_name`, `last_name`, `date_of_birth`, `gender`, `title`) VALUES ('Ernest Paul', 'Ferrer', '1991-08-01', 'M', 'Mulesoft Developer');
+
+
+INSERT INTO `communications` (`identification_id`, `value`, `preferred`, `type`) VALUES (1, 'ernestpaulferrer@gmail.com', 0, 'EMail');
+INSERT INTO `communications` (`identification_id`, `value`, `preferred`, `type`) VALUES (1, '+639989213521', 1, 'Phone');
+INSERT INTO `communications` (`identification_id`, `value`, `preferred`, `type`) VALUES (2, 'ernestpaulferrer@gmail.com', 0, 'EMail');
+INSERT INTO `communications` (`identification_id`, `value`, `preferred`, `type`) VALUES (2, '+639989213521', 1, 'Phone');
+
+
+
+INSERT INTO `addresses` (`identification_id`, `number`, `street`, `unit`, `city`, `state`, `zipcode`, `type`) VALUES (1, 1234, 'Sampaguita', '1A', 'Mabalacat', 'Angeles', '3432B', 'Office');
+INSERT INTO `addresses` (`identification_id`, `number`, `street`, `unit`, `city`, `state`, `zipcode`, `type`) VALUES (1, 4567, 'Aquamarine', '2B', 'Capas', 'Tarlac', '543H', 'Home');
+INSERT INTO `addresses` (`identification_id`, `number`, `street`, `unit`, `city`, `state`, `zipcode`, `type`) VALUES (2, 1234, 'Sampaguita', '1A', 'Mabalacat', 'Angeles', '3432B', 'Office');
+INSERT INTO `addresses` (`identification_id`, `number`, `street`, `unit`, `city`, `state`, `zipcode`, `type`) VALUES (2, 4567, 'Aquamarine', '2B', 'Capas', 'Tarlac', '543H', 'Home');
+]]></db:bulk-execute>
+	</munit:before-suite>
+    <munit:test name="delete:/identifications/iid/addresses/aid:v1-contacts-config-204--FlowTest" description="Verifying functionality of [delete:/identifications/iid/addresses/aid:v1-contacts-config-204-]" >
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <set-variable variableName="aid" value="#[4]" doc:name="aid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="DELETE" path="/identifications/{iid}/addresses/{aid}" doc:name="HTTP">
+			<http:request-builder>
+				<http:uri-param paramName="iid" value="#[flowVars.iid]"/>
+				<http:uri-param paramName="aid" value="#[flowVars.aid]"/>
+			</http:request-builder>
+		</http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(204))]" doc:name="assert that - http.status eq 204" />
+    </munit:test>
+    <munit:test name="delete:/identifications/iid/addresses/aid:v1-contacts-config-404-application/json-FlowTest" description="Verifying functionality of [delete:/identifications/iid/addresses/aid:v1-contacts-config-404-application/json]" >
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <set-variable variableName="aid" value="#[100]" doc:name="aid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="DELETE" path="/identifications/#[flowVars['iid']]/addresses/#[flowVars['aid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="404" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(404))]" doc:name="assert that - http.status eq 404" />
+
+    </munit:test>
+    <munit:test name="delete:/identifications/iid/communications/cid:v1-contacts-config-204--FlowTest" description="Verifying functionality of [delete:/identifications/iid/communications/cid:v1-contacts-config-204-]" >
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <set-variable variableName="cid" value="#[4]" doc:name="cid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="DELETE" path="/identifications/#[flowVars['iid']]/communications/#[flowVars['cid']]" doc:name="HTTP"/>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(204))]" doc:name="assert that - http.status eq 204" />
+    </munit:test>
+    <munit:test name="delete:/identifications/iid/communications/cid:v1-contacts-config-404-application/json-FlowTest" description="Verifying functionality of [delete:/identifications/iid/communications/cid:v1-contacts-config-404-application/json]" >
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <set-variable variableName="cid" value="#[4]" doc:name="cid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="DELETE" path="/identifications/#[flowVars['iid']]/communications/#[flowVars['cid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="404" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(404))]" doc:name="assert that - http.status eq 404" />
+
+    </munit:test>
+    <munit:test name="delete:/identifications/iid:v1-contacts-config-204--FlowTest" description="Verifying functionality of [delete:/identifications/iid:v1-contacts-config-204-]" >
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="DELETE" path="/identifications/#[flowVars['iid']]" doc:name="HTTP"/>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(204))]" doc:name="assert that - http.status eq 204" />
+    </munit:test>
+    <munit:test name="delete:/identifications/iid:v1-contacts-config-404-application/json-FlowTest" description="Verifying functionality of [delete:/identifications/iid:v1-contacts-config-404-application/json]" >
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="DELETE" path="/identifications/#[flowVars['iid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="404" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(404))]" doc:name="assert that - http.status eq 404" />
+
+    </munit:test>
+    <munit:test name="patch:/identifications/iid/addresses/aid:application/json:v1-contacts-config-200-application/json-FlowTest" description="Verifying functionality of [patch:/identifications/iid/addresses/aid:application/json:v1-contacts-config-200-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/patch_identifications_{iid}_addresses_{aid}_application_json.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <set-variable variableName="aid" value="#[2]" doc:name="aid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="PATCH" path="/identifications/#[flowVars['iid']]/addresses/#[flowVars['aid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+
+    </munit:test>
+    <munit:test name="patch:/identifications/iid/addresses/aid:application/json:v1-contacts-config-400-application/json-FlowTest" description="Verifying functionality of [patch:/identifications/iid/addresses/aid:application/json:v1-contacts-config-400-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/patch_identifications_{iid}_addresses_{aid}_application_json_400.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <set-variable variableName="aid" value="#[4]" doc:name="aid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="PATCH" path="/identifications/#[flowVars['iid']]/addresses/#[flowVars['aid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="400" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(400))]" doc:name="assert that - http.status eq 400" />
+
+    </munit:test>
+    <munit:test name="patch:/identifications/iid/addresses/aid:application/json:v1-contacts-config-500-application/json-FlowTest" description="Verifying functionality of [patch:/identifications/iid/addresses/aid:application/json:v1-contacts-config-500-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/patch_identifications_{iid}_addresses_{aid}_application_json_500.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <set-variable variableName="aid" value="#[4]" doc:name="aid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="PATCH" path="/identifications/#[flowVars['iid']]/addresses/#[flowVars['aid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="500" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(500))]" doc:name="assert that - http.status eq 500" />
+
+    </munit:test>
+    <munit:test name="patch:/identifications/iid/communications/cid:application/json:v1-contacts-config-200-application/json-FlowTest" description="Verifying functionality of [patch:/identifications/iid/communications/cid:application/json:v1-contacts-config-200-application/json]">
+        <set-payload value="#[getResource('scaffolder/request/patch_identifications_{iid}_communications_{cid}_application_json.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <set-variable variableName="cid" value="#[2]" doc:name="cid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="PATCH" path="/identifications/#[flowVars['iid']]/communications/#[flowVars['cid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+
+    </munit:test>
+    <munit:test name="patch:/identifications/iid/communications/cid:application/json:v1-contacts-config-400-application/json-FlowTest" description="Verifying functionality of [patch:/identifications/iid/communications/cid:application/json:v1-contacts-config-400-application/json]">
+        <set-payload value="#[getResource('scaffolder/request/patch_identifications_{iid}_communications_{cid}_application_json_400.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <set-variable variableName="cid" value="#[4]" doc:name="cid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="PATCH" path="/identifications/#[flowVars['iid']]/communications/#[flowVars['cid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="400" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(400))]" doc:name="assert that - http.status eq 400" />
+
+    </munit:test>
+    <munit:test name="patch:/identifications/iid/communications/cid:application/json:v1-contacts-config-500-application/json-FlowTest" description="Verifying functionality of [patch:/identifications/iid/communications/cid:application/json:v1-contacts-config-500-application/json]">
+        <set-payload value="#[getResource('scaffolder/request/patch_identifications_{iid}_communications_{cid}_application_json_500.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[2]" doc:name="iid" />
+        <set-variable variableName="cid" value="#[4]" doc:name="cid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="PATCH" path="/identifications/#[flowVars['iid']]/communications/#[flowVars['cid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="500" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(500))]" doc:name="assert that - http.status eq 500" />
+
+    </munit:test>
+    <munit:test name="patch:/identifications/iid:application/json:v1-contacts-config-200-application/json-FlowTest" description="Verifying functionality of [patch:/identifications/iid:application/json:v1-contacts-config-200-application/json]">
+        <set-payload value="#[getResource('scaffolder/request/patch_identifications_{iid}_application_json.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="PATCH" path="/identifications/#[flowVars['iid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+
+    </munit:test>
+    <munit:test name="patch:/identifications/iid:application/json:v1-contacts-config-400-application/json-FlowTest" description="Verifying functionality of [patch:/identifications/iid:application/json:v1-contacts-config-400-application/json]">
+        <set-payload value="#[getResource('scaffolder/request/patch_identifications_{iid}_application_json_400.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="PATCH" path="/identifications/#[flowVars['iid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="400" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(400))]" doc:name="assert that - http.status eq 400" />
+
+    </munit:test>
+    <munit:test name="patch:/identifications/iid:application/json:v1-contacts-config-500-application/json-FlowTest" description="Verifying functionality of [patch:/identifications/iid:application/json:v1-contacts-config-500-application/json]">
+        <set-payload value="#[getResource('scaffolder/request/patch_identifications_{iid}_application_json_500.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="PATCH" path="/identifications/#[flowVars['iid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="500" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(500))]" doc:name="assert that - http.status eq 500" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid/addresses:v1-contacts-config-200-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid/addresses:v1-contacts-config-200-application/json]">
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]/addresses" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid/addresses:v1-contacts-config-404-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid/addresses:v1-contacts-config-404-application/json]">
+        <set-variable variableName="iid" value="#[100]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]/addresses" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="404" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(404))]" doc:name="assert that - http.status eq 404" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid/communications:v1-contacts-config-200-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid/communications:v1-contacts-config-200-application/json]">
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]/communications" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid/communications:v1-contacts-config-404-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid/communications:v1-contacts-config-404-application/json]" >
+        <set-variable variableName="iid" value="#[100]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]/communications" doc:name="HTTP">
+            <http:request-builder>
+				<http:header headerName="Accept" value="application/json"/>
+
+            </http:request-builder>
+            <http:success-status-code-validator values="404" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(404))]" doc:name="assert that - http.status eq 404" />
+
+    </munit:test>
+    <munit:test name="get:/identifications:v1-contacts-config-200-application/json-FlowTest" description="Verifying functionality of [get:/identifications:v1-contacts-config-200-application/json]" >
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+
+    </munit:test>
+    <munit:test name="get:/identifications:v1-contacts-config-404-application/json-FlowTest" description="Verifying functionality of [get:/identifications:v1-contacts-config-404-application/json]" >
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications" doc:name="HTTP">
+            <http:request-builder>
+				<http:query-param paramName="name" value="#['test123123']"/>
+				<http:header headerName="Accept" value="application/json"/>
+
+            </http:request-builder>
+            <http:success-status-code-validator values="404" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(404))]" doc:name="assert that - http.status eq 404" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid/addresses/aid:v1-contacts-config-200-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid/addresses/aid:v1-contacts-config-200-application/json]" >
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <set-variable variableName="aid" value="#[1]" doc:name="aid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]/addresses/#[flowVars['aid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid/addresses/aid:v1-contacts-config-404-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid/addresses/aid:v1-contacts-config-404-application/json]" >
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <set-variable variableName="aid" value="#[100]" doc:name="aid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]/addresses/#[flowVars['aid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="404" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(404))]" doc:name="assert that - http.status eq 404" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid/communications/cid:v1-contacts-config-200-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid/communications/cid:v1-contacts-config-200-application/json]" >
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <set-variable variableName="cid" value="#[1]" doc:name="cid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]/communications/#[flowVars['cid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid/communications/cid:v1-contacts-config-404-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid/communications/cid:v1-contacts-config-404-application/json]" >
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <set-variable variableName="cid" value="#[110]" doc:name="cid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]/communications/#[flowVars['cid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="404" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(404))]" doc:name="assert that - http.status eq 404" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid:v1-contacts-config-200-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid:v1-contacts-config-200-application/json]" >
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+
+    </munit:test>
+    <munit:test name="get:/identifications/iid:v1-contacts-config-404-application/json-FlowTest" description="Verifying functionality of [get:/identifications/iid:v1-contacts-config-404-application/json]" >
+        <set-variable variableName="iid" value="#[121]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/identifications/#[flowVars['iid']]" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="404" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(404))]" doc:name="assert that - http.status eq 404" />
+
+    </munit:test>
+    <munit:test name="post:/identifications/iid/addresses:application/json:v1-contacts-config-201-application/json-FlowTest" description="Verifying functionality of [post:/identifications/iid/addresses:application/json:v1-contacts-config-201-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/post_identifications_{iid}_addresses_application_json.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/identifications/{iid}/addresses" doc:name="HTTP">
+            <http:request-builder>
+				<http:uri-param paramName="iid" value="#[flowVars['iid']]"/>
+				<http:header headerName="Accept" value="application/json"/>
+				<http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(201))]" doc:name="assert that - http.status eq 201" />
+
+    </munit:test>
+    <munit:test name="post:/identifications/iid/addresses:application/json:v1-contacts-config-400-application/json-FlowTest" description="Verifying functionality of [post:/identifications/iid/addresses:application/json:v1-contacts-config-400-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/post_identifications_{iid}_addresses_application_json_400.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/identifications/{iid}/addresses" doc:name="HTTP">
+            <http:request-builder>
+				<http:uri-param paramName="iid" value="#[flowVars['iid']]"/>
+				<http:header headerName="Accept" value="application/json"/>
+				<http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+            <http:success-status-code-validator values="400" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(400))]" doc:name="assert that - http.status eq 400" />
+
+    </munit:test>
+    <munit:test name="post:/identifications/iid/communications:application/json:v1-contacts-config-201-application/json-FlowTest" description="Verifying functionality of [post:/identifications/iid/communications:application/json:v1-contacts-config-201-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/post_identifications_{iid}_communications_application_json.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/identifications/{iid}/communications" doc:name="HTTP">
+            <http:request-builder>
+				<http:uri-param paramName="iid" value="#[flowVars['iid']]"/>
+				<http:header headerName="Accept" value="application/json"/>
+				<http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(201))]" doc:name="assert that - http.status eq 201" />
+
+    </munit:test>
+    <munit:test name="post:/identifications/iid/communications:application/json:v1-contacts-config-400-application/json-FlowTest" description="Verifying functionality of [post:/identifications/iid/communications:application/json:v1-contacts-config-400-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/post_identifications_{iid}_communications_application_json_400.json').asString()]" doc:name="Set Payload"/>
+        <set-variable variableName="iid" value="#[1]" doc:name="iid" />
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/identifications/{iid}/communications" doc:name="HTTP">
+            <http:request-builder>
+				<http:uri-param paramName="iid" value="#[flowVars['iid']]"/>
+				<http:header headerName="Accept" value="application/json"/>
+				<http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+            <http:success-status-code-validator values="400" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(400))]" doc:name="assert that - http.status eq 400" />
+
+    </munit:test>
+    <munit:test name="post:/identifications:application/json:v1-contacts-config-201-application/json-FlowTest" description="Verifying functionality of [post:/identifications:application/json:v1-contacts-config-201-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/post_identifications_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/identifications" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(201))]" doc:name="assert that - http.status eq 201" />
+
+    </munit:test>
+    <munit:test name="post:/identifications:application/json:v1-contacts-config-400-application/json-FlowTest" description="Verifying functionality of [post:/identifications:application/json:v1-contacts-config-400-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/post_identifications_application_json_400.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/identifications" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="400" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(400))]" doc:name="assert that - http.status eq 400" />
+
+    </munit:test>
+    <munit:test name="post:/identifications:application/json:v1-contacts-config-500-application/json-FlowTest" description="Verifying functionality of [post:/identifications:application/json:v1-contacts-config-500-application/json]" >
+        <set-payload value="#[getResource('scaffolder/request/post_identifications_application_json_500.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/identifications" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+            <http:success-status-code-validator values="500" />
+        </http:request>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(500))]" doc:name="assert that - http.status eq 500" />
+
+    </munit:test>
+</mule>

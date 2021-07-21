@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+	
+	<sub-flow name="impl-get-all-addresses-by-identification-id">
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<processor-chain doc:name="Processor Chain">
+				<scripting:component doc:name="Groovy">
+					<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM addresses WHERE identification_id = ${flowVars.uriParams.iid}"]]></scripting:script>
+				</scripting:component>
+			</processor-chain>
+		</enricher>
+		<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+		<flow-ref name="commons-determine-get-content" doc:name="commons-determine-get-content"/>
+		<flow-ref name="commons-transform-addresses" doc:name="commons-transform-addresses"/>
+	</sub-flow>
+	
+	<sub-flow name="impl-get-all-addresses-by-identification-id-and-address-id">
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<processor-chain doc:name="Processor Chain">
+				<scripting:component doc:name="Groovy">
+					<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM addresses WHERE identification_id = ${flowVars.uriParams.iid} and id = ${flowVars.uriParams.aid}"]]></scripting:script>
+				</scripting:component>
+			</processor-chain>
+		</enricher>
+		<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+		<flow-ref name="commons-determine-get-content" doc:name="commons-determine-get-content"/>
+		<flow-ref name="commons-transform-addresses" doc:name="commons-transform-addresses"/>
+	</sub-flow>
+	<sub-flow name="impl-get-all-communications-by-identification-id-and-communication-id">
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<processor-chain doc:name="Processor Chain">
+				<scripting:component doc:name="Groovy">
+					<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM communications WHERE identification_id = ${flowVars.uriParams.iid} and id = ${flowVars.uriParams.cid}"]]></scripting:script>
+				</scripting:component>
+			</processor-chain>
+		</enricher>
+		<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+		<flow-ref name="commons-determine-get-content" doc:name="commons-determine-get-content"/>
+		<flow-ref name="commons-transform-communications" doc:name="commons-transform-communications"/>
+	</sub-flow>
+	<sub-flow name="impl-get-all-communications-by-identification-id">
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<processor-chain doc:name="Processor Chain">
+				<scripting:component doc:name="Groovy">
+					<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM communications WHERE identification_id = ${flowVars.uriParams.iid}"]]></scripting:script>
+				</scripting:component>
+			</processor-chain>
+		</enricher>
+		<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+		<flow-ref name="commons-determine-get-content" doc:name="commons-determine-get-content"/>
+		<flow-ref name="commons-transform-communications" doc:name="commons-transform-communications"/>
+	</sub-flow>
+	
+	
+	<sub-flow name="impl-get-all-identifications-by-query">
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<processor-chain doc:name="Processor Chain">
+				<scripting:component doc:name="Groovy">
+					<scripting:script engine="Groovy"><![CDATA[def name = "";
+if(flowVars.queryParams) {
+	if(flowVars.queryParams.name) {
+		name = "  AND (first_name like '%${flowVars.queryParams.name}%' OR last_name like '%${flowVars.queryParams.name}%') "
+	}
+}
+
+def dynamicSql = "SELECT * FROM identifications where 1 = 1 ${name}";]]></scripting:script>
+				</scripting:component>
+			</processor-chain>
+		</enricher>
+		<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+		<flow-ref name="commons-determine-get-content" doc:name="commons-determine-get-content"/>
+		<flow-ref name="commons-transform-identifications" doc:name="commons-transform-identifications"/>
+
+	</sub-flow>
+	<sub-flow name="impl-get-identifications-by-id">
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<processor-chain doc:name="Processor Chain">
+				<scripting:component doc:name="Groovy">
+					<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM identifications WHERE id = ${flowVars.uriParams.iid}"]]></scripting:script>
+				</scripting:component>
+			</processor-chain>
+		</enricher>
+		<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+		<flow-ref name="commons-determine-get-content" doc:name="commons-determine-get-content"/>
+		<flow-ref name="commons-transform-identifications" doc:name="commons-transform-identifications"/>
+	</sub-flow>
+	
+	<sub-flow name="impl-delete-identifications-by-id">
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<processor-chain doc:name="Processor Chain">
+				<scripting:component doc:name="Groovy">
+					<scripting:script engine="Groovy"><![CDATA[return "DELETE FROM identifications WHERE id = ${flowVars.uriParams.iid}"]]></scripting:script>
+				</scripting:component>
+			</processor-chain>
+		</enricher>
+		<flow-ref name="execute-dynamic-delete-query" doc:name="execute-dynamic-delete-query"/>
+		<flow-ref name="commons-determine-delete-content" doc:name="commons-determine-delete-content"/>
+	</sub-flow>
+	
+	<sub-flow name="impl-delete-communications-by-iid-and-cid">
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<processor-chain doc:name="Processor Chain">
+				<scripting:component doc:name="Groovy">
+					<scripting:script engine="Groovy"><![CDATA[return "DELETE FROM communications WHERE identification_id = ${flowVars.uriParams.iid} and id = ${flowVars.uriParams.cid}"]]></scripting:script>
+				</scripting:component>
+			</processor-chain>
+		</enricher>
+		<flow-ref name="execute-dynamic-delete-query" doc:name="execute-dynamic-delete-query"/>
+		<flow-ref name="commons-determine-delete-content" doc:name="commons-determine-delete-content"/>
+	</sub-flow>
+	
+	<sub-flow name="impl-delete-addresses-by-iid-and-aid">
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<processor-chain doc:name="Processor Chain">
+				<scripting:component doc:name="Groovy">
+					<scripting:script engine="Groovy"><![CDATA[return "DELETE FROM addresses WHERE identification_id = ${flowVars.uriParams.iid} and id = ${flowVars.uriParams.aid}"]]></scripting:script>
+				</scripting:component>
+			</processor-chain>
+		</enricher>
+		<flow-ref name="execute-dynamic-delete-query" doc:name="execute-dynamic-delete-query"/>
+		<flow-ref name="commons-determine-delete-content" doc:name="commons-determine-delete-content"/>
+	</sub-flow>
+	<sub-flow name="impl-create-communication">
+		<json:json-to-object-transformer doc:name="JSON to Object" mimeType="application/java" returnClass="java.util.Map" encoding="UTF-8"/>
+		<flow-ref name="update-communications-preferred" doc:name="update-communications-preferred"/>
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<scripting:component doc:name="Groovy">
+				<scripting:script engine="Groovy"><![CDATA[def c = payload;
+def preferred = c.preferred ? "1" : "0";
+
+return "INSERT INTO `communications` (`identification_id`, `value`, `preferred`, `type`) VALUES (${flowVars.uriParams.iid}, '${c.value}', '${preferred}', '${c.type}')"]]></scripting:script>
+			</scripting:component>
+		</enricher>
+		<flow-ref name="execute-dynamic-insert-query" doc:name="execute-dynamic-insert-query"/>
+		<choice doc:name="Choice">
+			<when expression="#[payload.size() &gt; 0]">
+				<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+					<scripting:component doc:name="Groovy">
+						<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM communications where identification_id = ${flowVars.uriParams.iid}"]]></scripting:script>
+					</scripting:component>
+				</enricher>
+				<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+				<flow-ref name="commons-transform-communications" doc:name="commons-transform-communications"/>
+				<set-property propertyName="http.status" value="201" doc:name="Property"/>
+			</when>
+			<otherwise>
+				<set-property propertyName="http.status" value="500" doc:name="Property"/>
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	message: "Internal Server Error."
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="impl-create-address">
+		<json:json-to-object-transformer doc:name="JSON to Object" mimeType="application/java" returnClass="java.util.Map" encoding="UTF-8"/>
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<scripting:component doc:name="Groovy">
+				<scripting:script engine="Groovy"><![CDATA[def a = payload;
+
+return "INSERT INTO `addresses` (`identification_id`, `number`, `street`, `unit`, `city`, `state`, `zipcode`, `type`) VALUES (${flowVars.uriParams.iid}, ${a.number}, '${a.street}', '${a.unit}', '${a.city}', '${a.state}', '${a.zipcode}', '${a.type}')"]]></scripting:script>
+			</scripting:component>
+		</enricher>
+		<flow-ref name="execute-dynamic-insert-query" doc:name="execute-dynamic-insert-query"/>
+		<choice doc:name="Choice">
+			<when expression="#[payload.size() &gt; 0]">
+				<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+					<scripting:component doc:name="Groovy">
+						<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM addresses where identification_id = ${flowVars.uriParams.iid}"]]></scripting:script>
+					</scripting:component>
+				</enricher>
+				<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+				<flow-ref name="commons-transform-addresses" doc:name="commons-transform-addresses"/>
+				<set-property propertyName="http.status" value="201" doc:name="Property"/>
+			</when>
+			<otherwise>
+				<set-property propertyName="http.status" value="#[500]" doc:name="Property"/>
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	message: "Internal Server Error."
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="impl-create-identification">
+		<json:json-to-object-transformer returnClass="java.util.Map" mimeType="application/java" doc:name="JSON to Object" encoding="UTF-8"/>
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<scripting:component doc:name="Groovy">
+				<scripting:script engine="Groovy"><![CDATA[def i = payload;
+
+return "INSERT INTO `identifications` (`first_name`, `last_name`, `date_of_birth`, `gender`, `title`) VALUES ('${i.firstName}', '${i.lastName}', '${i.dateOfBirth}', '${i.gender}', '${i.title}')"]]></scripting:script>
+			</scripting:component>
+		</enricher>
+		<flow-ref name="execute-dynamic-insert-query" doc:name="execute-dynamic-insert-query"/>
+		<choice doc:name="Choice">
+			<when expression="#[payload.size() &gt; 0]">
+				<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+					<scripting:component doc:name="Groovy">
+						<scripting:script engine="Groovy"><![CDATA[def generatedId = payload[0].GENERATED_KEY;
+
+return "SELECT * FROM identifications where id = ${generatedId}"]]></scripting:script>
+					</scripting:component>
+				</enricher>
+				<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+				<flow-ref name="commons-transform-identifications" doc:name="commons-transform-identifications"/>
+				<set-property propertyName="http.status" value="201" doc:name="Property"/>
+			</when>
+			<otherwise>
+				<set-property propertyName="http.status" value="#[500]" doc:name="Property"/>
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	message: "Internal Server Error."
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="impl-update-identification">
+		<json:json-to-object-transformer doc:name="JSON to Object" encoding="UTF-8" mimeType="application/java" returnClass="java.util.Map"/>
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<scripting:component doc:name="Groovy">
+				<scripting:script engine="Groovy"><![CDATA[def i = payload;
+def properties = " updated = now() ";
+
+if(i.firstName != null) properties = " ${properties} , first_name = '${i.firstName}' "
+if(i.lastName != null) properties = " ${properties} , last_name = '${i.lastName}' "
+if(i.dateOfBirth != null) properties = " ${properties} , date_of_birth = '${i.dateOfBirth}' "
+if(i.gender != null) properties = " ${properties} , gender = '${i.gender}' "
+if(i.title != null) properties = " ${properties} , title = '${i.title}' "
+
+def dynamicSql = "UPDATE identifications SET ${properties} WHERE id = ${flowVars.uriParams.iid}"
+
+return dynamicSql;]]></scripting:script>
+			</scripting:component>
+		</enricher>
+		<flow-ref name="execute-dynamic-update-query" doc:name="execute-dynamic-update-query"/>
+		<choice doc:name="Choice">
+			<when expression="#[payload &gt; 0]">
+				<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+					<scripting:component doc:name="Groovy">
+						<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM identifications WHERE id = ${flowVars.uriParams.iid}"]]></scripting:script>
+					</scripting:component>
+				</enricher>
+				<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+				<flow-ref name="commons-transform-identifications" doc:name="commons-transform-identifications"/>
+			</when>
+			<otherwise>
+				<set-property propertyName="http.status" value="#[500]" doc:name="Property"/>
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	message: "Internal Server Error."
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="impl-update-address">
+		<json:json-to-object-transformer doc:name="JSON to Object" encoding="UTF-8" mimeType="application/java" returnClass="java.util.Map"/>
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<scripting:component doc:name="Groovy">
+				<scripting:script engine="Groovy"><![CDATA[def i = payload;
+def properties = " updated = now() ";
+
+if(i.number != null) properties = " ${properties} , number = ${i.number} "
+if(i.street != null) properties = " ${properties} , street = '${i.street}' "
+if(i.unit != null) properties = " ${properties} , unit = '${i.unit}' "
+if(i.city != null) properties = " ${properties} , city = '${i.city}' "
+if(i.state != null) properties = " ${properties} , state = '${i.state}' "
+if(i.zipcode != null) properties = " ${properties} , zipcode = '${i.zipcode}' "
+
+def dynamicSql = "UPDATE addresses SET ${properties} WHERE id = ${flowVars.uriParams.aid} and identification_id = ${flowVars.uriParams.iid}"
+
+return dynamicSql;]]></scripting:script>
+			</scripting:component>
+		</enricher>
+		<flow-ref name="execute-dynamic-update-query" doc:name="execute-dynamic-update-query"/>
+		<choice doc:name="Choice">
+			<when expression="#[payload &gt; 0]">
+				<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+					<scripting:component doc:name="Groovy">
+						<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM addresses WHERE id = ${flowVars.uriParams.aid}"]]></scripting:script>
+					</scripting:component>
+				</enricher>
+				<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+				<flow-ref name="commons-transform-addresses" doc:name="commons-transform-addresses"/>
+			</when>
+			<otherwise>
+				<set-property propertyName="http.status" value="500" doc:name="Property"/>
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	message: "Internal Server Error."
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="impl-update-communications">
+		<json:json-to-object-transformer doc:name="JSON to Object" encoding="UTF-8" mimeType="application/java" returnClass="java.util.Map"/>
+		<flow-ref name="update-communications-preferred" doc:name="update-communications-preferred"/>
+		<enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+			<scripting:component doc:name="Groovy">
+				<scripting:script engine="Groovy"><![CDATA[def i = payload;
+def properties = " updated = now() ";
+def preferred = i.preferred ? "1" : "0";
+
+if(i.value != null) properties = " ${properties} , value = '${i.value}' "
+if(i.type != null) properties = " ${properties} , type = '${i.type}' "
+if(i.preferred != null) properties = " ${properties} , preferred = ${preferred} "
+
+
+def dynamicSql = "UPDATE communications SET ${properties} WHERE id = ${flowVars.uriParams.cid} and identification_id = ${flowVars.uriParams.iid}"
+
+return dynamicSql;]]></scripting:script>
+			</scripting:component>
+		</enricher>
+		<flow-ref name="execute-dynamic-update-query" doc:name="execute-dynamic-update-query"/>
+		<choice doc:name="Choice">
+			<when expression="#[payload &gt; 0]">
+				<enricher doc:name="Message Enricher" target="#[flowVars.dynamicSql]">
+					<scripting:component doc:name="Groovy">
+						<scripting:script engine="Groovy"><![CDATA[return "SELECT * FROM communications WHERE id = ${flowVars.uriParams.cid}"]]></scripting:script>
+					</scripting:component>
+				</enricher>
+				<flow-ref name="execute-dynamic-select-query" doc:name="execute-dynamic-select-query"/>
+				<flow-ref name="commons-transform-communications" doc:name="commons-transform-communications"/>
+			</when>
+			<otherwise>
+				<set-property propertyName="http.status" value="500" doc:name="Property"/>
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	message: "Internal Server Error."
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	
+</mule>

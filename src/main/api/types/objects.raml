@@ -1,0 +1,168 @@
+#%RAML 1.0 Library
+
+types:
+  identification:
+    type: object
+    properties:
+      firstName:
+        type: string
+        example: Ernest Paul
+        minLength: 1
+        maxLength: 50
+      lastName:
+        type: string
+        example: Ferrer
+        minLength: 1
+        maxLength: 50
+      dateOfBirth:
+        type: string
+        example: 1991-08-01
+        minLength: 1
+        maxLength: 50
+      gender:
+        enum: [M, F]
+        example: M
+        minLength: 1
+        maxLength: 1
+      title:
+        type: string
+        example: Mulesoft Integration Developer
+        minLength: 1
+        maxLength: 50
+        
+  address:
+    type: object
+    properties:
+      number:
+        type: number
+        example: 1234 
+      street:
+        type: string
+        example: Wall Street
+        minLength: 1
+        maxLength: 50
+      unit:
+        type: string
+        example: 1B
+        minLength: 1
+        maxLength: 50
+      state:
+        type: string
+        example: Angeles
+        minLength: 1
+        maxLength: 50
+      zipcode:
+        type: string
+        example: 2315A
+        minLength: 1
+        maxLength: 50
+      type:
+        enum: [Home, Office]
+        minLength: 1
+        maxLength: 10
+        
+  communication:
+    type: object
+    properties:
+      value:
+        type: string
+        example: ernestpaulferrer@gmail.com
+        minLength: 1
+        maxLength: 50
+      preferred:
+        type: boolean
+        default: false
+      type:
+        enum: [Phone, EMail]
+        minLength: 1
+        maxLength: 10
+      
+  patchIdentification:
+    type: object
+    properties:
+      firstName:
+        required: false
+        type: string
+        example: Ernest Paul
+        minLength: 1
+        maxLength: 50
+      lastName:
+        required: false
+        type: string
+        example: Ferrer
+        minLength: 1
+        maxLength: 50
+      dateOfBirth:
+        required: false
+        type: string
+        example: 1991-08-01
+        minLength: 1
+        maxLength: 50
+      gender:
+        required: false
+        enum: [M, F]
+        example: M
+        minLength: 1
+        maxLength: 1
+      title:
+        required: false
+        type: string
+        example: Mulesoft Integration Developer
+        minLength: 1
+        maxLength: 50
+        
+  patchAddress:
+    type: object
+    properties:
+      number:
+        required: false
+        type: number
+        example: 1234 
+      street:
+        required: false
+        type: string
+        example: Wall Street
+        minLength: 1
+        maxLength: 50
+      unit:
+        required: false
+        type: string
+        example: 1B
+        minLength: 1
+        maxLength: 50
+      state:
+        required: false
+        type: string
+        example: Angeles
+        minLength: 1
+        maxLength: 50
+      zipcode:
+        required: false
+        type: string
+        example: 2315A
+        minLength: 1
+        maxLength: 50
+      type:
+        required: false
+        enum: [Home, Office]
+        minLength: 1
+        maxLength: 10
+        
+  patchCommunication:
+    type: object
+    properties:
+      value:
+        required: false
+        type: string
+        example: ernestpaulferrer@gmail.com
+        minLength: 1
+        maxLength: 50
+      preferred:
+        required: false
+        type: boolean
+        default: false
+      type:
+        required: false
+        enum: [Phone, EMail]
+        minLength: 1
+        maxLength: 10

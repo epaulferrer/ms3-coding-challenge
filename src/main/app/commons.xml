@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+    <sub-flow name="update-communications-preferred">
+        <choice doc:name="Choice">
+            <when expression="#[payload.preferred]">
+                <enricher target="#[flowVars.dynamicSql]" doc:name="Message Enricher">
+                    <scripting:component doc:name="Groovy">
+                        <scripting:script engine="Groovy"><![CDATA[return "UPDATE communications SET preferred = 0 WHERE identification_id = ${flowVars.uriParams.iid} and preferred = 1"]]></scripting:script>
+                    </scripting:component>
+                </enricher>
+                <enricher target="#[flowVars.updateResults]" doc:name="Message Enricher">
+                    <flow-ref name="execute-dynamic-update-query" doc:name="execute-dynamic-update-query"/>
+                </enricher>
+            </when>
+            <otherwise>
+                <logger level="DEBUG" doc:name="Do nothing."/>
+            </otherwise>
+        </choice>
+    </sub-flow>
+    <sub-flow name="commons-determine-get-content">
+        <choice doc:name="Choice">
+            <when expression="#[payload.size() &gt; 0]">
+                <set-property propertyName="http.status" value="200" doc:name="Property"/>
+            </when>
+            <otherwise>
+                <set-property propertyName="http.status" value="404" doc:name="Property"/>
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	error: "resource not found"
+}]]></dw:set-payload>
+				</dw:transform-message>
+            </otherwise>
+        </choice>
+    </sub-flow>
+    <sub-flow name="commons-determine-delete-content">
+        <choice doc:name="Choice">
+            <when expression="#[payload == 1]">
+                <set-property propertyName="http.status" value="204" doc:name="Property"/>
+            </when>
+            <otherwise>
+                <set-property propertyName="http.status" value="404" doc:name="Property"/>
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	error: "resource not found"
+}]]></dw:set-payload>
+				</dw:transform-message>
+            </otherwise>
+        </choice>
+    </sub-flow>
+    <sub-flow name="commons-transform-communications">
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map {
+
+	"type": $.type,	
+	"value": $.value,
+	"preferred": $.preferred,
+
+	
+	"id": $.id,	
+	"identificationId": $.identification_id,
+    ("created": $.created as :localdatetime {format: "yyyy-MM-dd hh:mm:ss a"}) when $.created != null,		
+	("updated": $.updated as :localdatetime {format: "yyyy-MM-dd hh:mm:ss a"}) when $.created != null
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </sub-flow>
+    <sub-flow name="commons-transform-addresses">
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map {
+	
+	"type": $.type,	
+	"number": $.number,
+	"street": $.street,
+	"unit": $.unit,
+	"city": $.city,
+	"state": $.state,
+	"zipcode": $.zipcode,
+	
+	"id": $.id,	
+	"identificationId": $.identification_id,
+    ("created": $.created as :localdatetime {format: "yyyy-MM-dd hh:mm:ss a"}) when $.created != null,		
+	("updated": $.updated as :localdatetime {format: "yyyy-MM-dd hh:mm:ss a"}) when $.created != null
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </sub-flow>
+    <sub-flow name="commons-transform-identifications">
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map {
+	"gender": $.gender,
+	"title": $.title,
+	"lastName": $.last_name,
+	("dateOfBirth": $.date_of_birth as :localdatetime {format: "yyyy-MM-dd"}) when $.date_of_birth != null,
+	"firstName": $.first_name,
+	"id": $.id,
+    ("created": $.created as :localdatetime {format: "yyyy-MM-dd hh:mm:ss a"}) when $.created != null,		
+	("updated": $.updated as :localdatetime {format: "yyyy-MM-dd hh:mm:ss a"}) when $.created != null
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </sub-flow>
+</mule>

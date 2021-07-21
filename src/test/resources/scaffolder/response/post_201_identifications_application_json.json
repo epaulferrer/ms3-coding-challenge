@@ -1,0 +1,12 @@
+[
+{
+"id" : 1,
+"firstName" : "Ernest Paul",
+"lastName" : "Ferrer",
+"dateOfBirth" : "1991-08-01",
+"gender" : "M",
+"title" : "Mulesoft Integration Developer",
+"created" : "2021-07-17 14:55:44",
+"updated" : "2021-07-17 14:55:45"
+}
+]
